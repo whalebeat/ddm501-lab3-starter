@@ -36,9 +36,9 @@ class TestModelInvariance:
         - Assert results are equal
         """
         # TODO: Implement
-        # result1 = trained_model.predict("196", "242")
-        # result2 = trained_model.predict("196", "242")
-        # assert result1 == result2
+        result1 = trained_model.predict("196", "242")
+        result2 = trained_model.predict("196", "242")
+        assert result1 == result2
         pass
     
     def test_multiple_calls_consistent(self, trained_model):
@@ -50,8 +50,8 @@ class TestModelInvariance:
         - Assert all results are equal
         """
         # TODO: Implement
-        # results = [trained_model.predict("196", "242") for _ in range(5)]
-        # assert all(r == results[0] for r in results)
+        results = [trained_model.predict("196", "242") for _ in range(5)]
+        assert all(r == results[0] for r in results)
         pass
     
     # =========================================================================
@@ -67,14 +67,14 @@ class TestModelInvariance:
         - Predictions for same pairs should be equal regardless of order
         """
         # TODO: Implement
-        # pairs1 = [("196", "242"), ("186", "302")]
-        # pairs2 = [("186", "302"), ("196", "242")]
-        # 
-        # results1 = trained_model.predict_batch(pairs1)
-        # results2 = trained_model.predict_batch(pairs2)
-        # 
-        # # Results should contain same values
-        # assert set(results1) == set(results2)
+        pairs1 = [("196", "242"), ("186", "302")]
+        pairs2 = [("186", "302"), ("196", "242")]
+        
+        results1 = trained_model.predict_batch(pairs1)
+        results2 = trained_model.predict_batch(pairs2)
+        
+        # Results should contain same values
+        assert set(results1) == set(results2)
         pass
     
     def test_individual_vs_batch_same_results(self, trained_model):
@@ -87,6 +87,16 @@ class TestModelInvariance:
         - Results should match
         """
         # TODO: Implement
+        pairs = [("196", "242"), ("186", "302")]
+
+        batch_results = trained_model.predict_batch(pairs)
+
+        individual_results = [
+            trained_model.predict(user, movie)
+            for user, movie in pairs
+        ]
+
+        assert batch_results == individual_results
         pass
 
 
@@ -110,10 +120,10 @@ class TestModelDirectional:
         - For known user-movie pairs, prediction should be within 1.5 of actual
         """
         # TODO: Implement
-        # for pair in known_user_movie_pairs:
-        #     prediction = trained_model.predict(pair["user_id"], pair["movie_id"])
-        #     actual = pair["actual_rating"]
-        #     assert abs(prediction - actual) < 1.5, f"Prediction {prediction} too far from actual {actual}"
+        for pair in known_user_movie_pairs:
+            prediction = trained_model.predict(pair["user_id"], pair["movie_id"])
+            actual = pair["actual_rating"]
+            assert abs(prediction - actual) < 1.5, f"Prediction {prediction} too far from actual {actual}"
         pass
     
     def test_different_movies_different_predictions(self, trained_model):
@@ -125,6 +135,10 @@ class TestModelDirectional:
         - Predictions should potentially differ
         """
         # TODO: Implement
+        pred1 = trained_model.predict("196", "242")
+        pred2 = trained_model.predict("196", "302")
+
+        assert pred1 != pred2
         pass
     
     def test_different_users_different_predictions(self, trained_model):
@@ -136,6 +150,10 @@ class TestModelDirectional:
         - Predictions should potentially differ
         """
         # TODO: Implement
+        pred1 = trained_model.predict("196", "242")
+        pred2 = trained_model.predict("186", "242")
+
+        assert pred1 != pred2
         pass
 
 
@@ -158,9 +176,9 @@ class TestMinimumFunctionality:
         TODO: Implement this test
         """
         # TODO: Implement
-        # prediction = trained_model.predict("196", "242")
-        # assert prediction is not None
-        # assert 1.0 <= prediction <= 5.0
+        prediction = trained_model.predict("196", "242")
+        assert prediction is not None
+        assert 1.0 <= prediction <= 5.0
         pass
     
     def test_can_predict_for_multiple_users(self, trained_model, known_user_movie_pairs):
@@ -170,6 +188,11 @@ class TestMinimumFunctionality:
         TODO: Implement this test
         """
         # TODO: Implement
+        for pair in known_user_movie_pairs:
+            prediction = trained_model.predict(pair["user_id"], pair["movie_id"])
+
+            assert prediction is not None
+            assert 1.0 <= prediction <= 5.0
         pass
     
     def test_predictions_not_all_same(self, trained_model, known_user_movie_pairs):
@@ -180,11 +203,11 @@ class TestMinimumFunctionality:
         - If all predictions are identical, model might be broken
         """
         # TODO: Implement
-        # predictions = [
-        #     trained_model.predict(p["user_id"], p["movie_id"])
-        #     for p in known_user_movie_pairs
-        # ]
-        # assert len(set(predictions)) > 1, "All predictions are identical"
+        predictions = [
+            trained_model.predict(p["user_id"], p["movie_id"])
+            for p in known_user_movie_pairs
+        ]
+        assert len(set(predictions)) > 1, "All predictions are identical"
         pass
     
     # =========================================================================
@@ -200,13 +223,13 @@ class TestMinimumFunctionality:
           or raise a specific error (not crash unexpectedly)
         """
         # TODO: Implement
-        # for user_id in unknown_users:
-        #     try:
-        #         prediction = trained_model.predict(user_id, "242")
-        #         # If it returns, should be valid
-        #         assert 1.0 <= prediction <= 5.0
-        #     except (ValueError, KeyError):
-        #         pass  # Acceptable to raise error
+        for user_id in unknown_users:
+            try:
+                prediction = trained_model.predict(user_id, "242")
+                # If it returns, should be valid
+                assert 1.0 <= prediction <= 5.0
+            except (ValueError, KeyError):
+                pass  # Acceptable to raise error
         pass
     
     def test_handles_unknown_movie_gracefully(self, trained_model, unknown_movies):
@@ -216,6 +239,12 @@ class TestMinimumFunctionality:
         TODO: Implement this test
         """
         # TODO: Implement
+        for movie_id in unknown_movies:
+            try:
+                prediction = trained_model.predict("196", movie_id)
+                assert 1.0 <= prediction <= 5.0
+            except (ValueError, KeyError):
+                pass  # Acceptable to raise error
         pass
 
 
@@ -240,6 +269,17 @@ class TestModelPerformance:
         - Should be less than 1.0
         """
         # TODO: Implement
+        errors = []
+
+        for pair in known_user_movie_pairs:
+            prediction = trained_model.predict(pair["user_id"], pair["movie_id"])
+            actual = pair["actual_rating"]
+
+            errors.append(abs(prediction - actual))
+
+        mae = sum(errors) / len(errors)
+
+        assert mae < 1.0
         pass
     
     def test_no_extreme_errors(self, trained_model, known_user_movie_pairs):
@@ -250,6 +290,11 @@ class TestModelPerformance:
         - No prediction should be off by more than 3.0
         """
         # TODO: Implement
+        for pair in known_user_movie_pairs:
+            prediction = trained_model.predict(pair["user_id"], pair["movie_id"])
+            actual = pair["actual_rating"]
+
+            assert abs(prediction - actual) < 3.0
         pass
 
 
@@ -269,6 +314,10 @@ class TestModelRobustness:
         TODO: Implement this test (BONUS)
         """
         # TODO: Implement
+        prediction = trained_model.predict("196", "242")
+
+        assert isinstance(prediction, float)
+        assert 1.0 <= prediction <= 5.0
         pass
     
     def test_handles_leading_zeros_in_ids(self, trained_model):
@@ -279,6 +328,11 @@ class TestModelRobustness:
         - "001" vs "1" might be treated differently
         """
         # TODO: Implement
+        pred1 = trained_model.predict("1", "242")
+        pred2 = trained_model.predict("001", "242")
+
+        assert 1.0 <= pred1 <= 5.0
+        assert 1.0 <= pred2 <= 5.0
         pass
 
 

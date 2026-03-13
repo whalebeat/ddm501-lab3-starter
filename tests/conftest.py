@@ -23,7 +23,8 @@ def test_client():
     
     Scope: session - created once for all tests
     """
-    return TestClient(app)
+    with TestClient(app) as client:
+        yield client
 
 
 # =============================================================================

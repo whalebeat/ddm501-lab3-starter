@@ -39,9 +39,9 @@ class TestHealthEndpoint:
         TODO: Implement this test
         """
         # TODO: Implement
-        # response = test_client.get("/health")
-        # data = response.json()
-        # assert "model_loaded" in data
+        response = test_client.get("/health")
+        data = response.json()
+        assert "model_loaded" in data
         pass
     
     def test_health_model_loaded_is_boolean(self, test_client):
@@ -51,6 +51,9 @@ class TestHealthEndpoint:
         TODO: Implement this test
         """
         # TODO: Implement
+        response = test_client.get("/health")
+        data = response.json()
+        assert isinstance(data["model_loaded"], bool)
         pass
 
 
@@ -74,6 +77,12 @@ class TestRootEndpoint:
         - Check for 'name', 'version', 'docs' fields
         """
         # TODO: Implement
+        response = test_client.get("/")
+        data = response.json()
+
+        assert "name" in data
+        assert "version" in data
+        assert "docs" in data
         pass
 
 
@@ -100,9 +109,9 @@ class TestPredictEndpoint:
         TODO: Implement this test
         """
         # TODO: Implement
-        # response = test_client.post("/predict", json=sample_prediction_request)
-        # data = response.json()
-        # assert "predicted_rating" in data
+        response = test_client.post("/predict", json=sample_prediction_request)
+        data = response.json()
+        assert "predicted_rating" in data
         pass
     
     def test_predict_response_has_user_id(self, test_client, sample_prediction_request):
@@ -112,6 +121,9 @@ class TestPredictEndpoint:
         TODO: Implement this test
         """
         # TODO: Implement
+        response = test_client.post("/predict", json=sample_prediction_request)
+        data = response.json()
+        assert "user_id" in data
         pass
     
     def test_predict_response_has_movie_id(self, test_client, sample_prediction_request):
@@ -121,6 +133,9 @@ class TestPredictEndpoint:
         TODO: Implement this test
         """
         # TODO: Implement
+        response = test_client.post("/predict", json=sample_prediction_request)
+        data = response.json()
+        assert "movie_id" in data
         pass
     
     def test_predict_response_rating_in_valid_range(self, test_client, sample_prediction_request):
@@ -130,6 +145,9 @@ class TestPredictEndpoint:
         TODO: Implement this test
         """
         # TODO: Implement
+        response = test_client.post("/predict", json=sample_prediction_request)
+        data = response.json()
+        assert 1.0 <= data["predicted_rating"] <= 5.0
         pass
     
     # =========================================================================
@@ -143,8 +161,8 @@ class TestPredictEndpoint:
         TODO: Implement this test
         """
         # TODO: Implement
-        # response = test_client.post("/predict", json={"movie_id": "242"})
-        # assert response.status_code == 422
+        response = test_client.post("/predict", json={"movie_id": "242"})
+        assert response.status_code == 422
         pass
     
     def test_predict_missing_movie_id_returns_422(self, test_client):
@@ -154,6 +172,8 @@ class TestPredictEndpoint:
         TODO: Implement this test
         """
         # TODO: Implement
+        response = test_client.post("/predict", json={"user_id": "196"})
+        assert response.status_code == 422
         pass
     
     def test_predict_empty_body_returns_422(self, test_client):
@@ -163,8 +183,8 @@ class TestPredictEndpoint:
         TODO: Implement this test
         """
         # TODO: Implement
-        # response = test_client.post("/predict", json={})
-        # assert response.status_code == 422
+        response = test_client.post("/predict", json={})
+        assert response.status_code == 422
         pass
     
     def test_predict_invalid_json_returns_422(self, test_client):
@@ -174,6 +194,13 @@ class TestPredictEndpoint:
         TODO: Implement this test
         """
         # TODO: Implement
+        response = test_client.post(
+            "/predict",
+            content="invalid json",
+            headers={"Content-Type": "application/json"}
+        )
+
+        assert response.status_code == 422
         pass
     
     # =========================================================================
@@ -190,6 +217,16 @@ class TestPredictEndpoint:
         - Assert all return 200
         """
         # TODO: Implement
+        for pair in known_user_movie_pairs:
+            response = test_client.post(
+                "/predict",
+                json={
+                    "user_id": pair["user_id"],
+                    "movie_id": pair["movie_id"]
+                }
+            )
+
+            assert response.status_code == 200
         pass
 
 
@@ -207,8 +244,8 @@ class TestBatchPredictEndpoint:
         TODO: Implement this test
         """
         # TODO: Implement
-        # response = test_client.post("/predict/batch", json=sample_batch_request)
-        # assert response.status_code == 200
+        response = test_client.post("/predict/batch", json=sample_batch_request)
+        assert response.status_code == 200
         pass
     
     def test_batch_predict_returns_correct_count(self, test_client, sample_batch_request):
@@ -218,6 +255,10 @@ class TestBatchPredictEndpoint:
         TODO: Implement this test
         """
         # TODO: Implement
+        response = test_client.post("/predict/batch", json=sample_batch_request)
+        data = response.json()
+
+        assert len(data["predictions"]) == len(sample_batch_request["predictions"])
         pass
     
     def test_batch_predict_all_ratings_in_range(self, test_client, sample_batch_request):
@@ -227,6 +268,12 @@ class TestBatchPredictEndpoint:
         TODO: Implement this test
         """
         # TODO: Implement
+        response = test_client.post("/predict/batch", json=sample_batch_request)
+        data = response.json()
+
+        for item in data["predictions"]:
+            assert 1.0 <= item["predicted_rating"] <= 5.0
+
         pass
 
 
@@ -244,8 +291,8 @@ class TestErrorHandling:
         TODO: Implement this test
         """
         # TODO: Implement
-        # response = test_client.get("/unknown")
-        # assert response.status_code == 404
+        response = test_client.get("/unknown")
+        assert response.status_code == 404
         pass
     
     def test_method_not_allowed_get_predict(self, test_client):
@@ -255,8 +302,8 @@ class TestErrorHandling:
         TODO: Implement this test
         """
         # TODO: Implement
-        # response = test_client.get("/predict")
-        # assert response.status_code == 405
+        response = test_client.get("/predict")
+        assert response.status_code == 405
         pass
     
     def test_method_not_allowed_post_health(self, test_client):
@@ -266,6 +313,8 @@ class TestErrorHandling:
         TODO: Implement this test
         """
         # TODO: Implement
+        response = test_client.post("/health")
+        assert response.status_code == 405
         pass
 
 
@@ -288,6 +337,10 @@ class TestModelInfoEndpoint:
         TODO: Implement this test
         """
         # TODO: Implement
+        response = test_client.get("/model/info")
+        data = response.json()
+
+        assert "model_version" in data
         pass
     
     def test_model_info_has_is_loaded(self, test_client):
@@ -297,6 +350,10 @@ class TestModelInfoEndpoint:
         TODO: Implement this test
         """
         # TODO: Implement
+        response = test_client.get("/model/info")
+        data = response.json()
+
+        assert "is_loaded" in data
         pass
 
 

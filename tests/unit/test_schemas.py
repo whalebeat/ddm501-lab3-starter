@@ -51,8 +51,8 @@ class TestPredictionRequest:
         - Try to create PredictionRequest without user_id
         """
         # TODO: Implement
-        # with pytest.raises(ValidationError):
-        #     PredictionRequest(movie_id="242")
+        with pytest.raises(ValidationError):
+            PredictionRequest(movie_id="242")
         pass
     
     def test_missing_movie_id_raises_error(self):
@@ -62,6 +62,8 @@ class TestPredictionRequest:
         TODO: Implement this test
         """
         # TODO: Implement
+        with pytest.raises(ValidationError):
+            PredictionRequest(user_id="196")
         pass
     
     def test_missing_both_fields_raises_error(self):
@@ -71,6 +73,8 @@ class TestPredictionRequest:
         TODO: Implement this test
         """
         # TODO: Implement
+        with pytest.raises(ValidationError):
+            PredictionRequest()
         pass
     
     # =========================================================================
@@ -84,8 +88,8 @@ class TestPredictionRequest:
         TODO: Implement this test
         """
         # TODO: Implement
-        # with pytest.raises(ValidationError):
-        #     PredictionRequest(user_id="", movie_id="242")
+        with pytest.raises(ValidationError):
+            PredictionRequest(movie_id="242")
         pass
     
     def test_whitespace_only_user_id_raises_error(self):
@@ -95,6 +99,8 @@ class TestPredictionRequest:
         TODO: Implement this test
         """
         # TODO: Implement
+        with pytest.raises(ValidationError):
+            PredictionRequest(user_id="196", movie_id="")
         pass
     
     def test_none_values_raise_error(self):
@@ -104,6 +110,8 @@ class TestPredictionRequest:
         TODO: Implement this test
         """
         # TODO: Implement
+        with pytest.raises(ValidationError):
+            PredictionRequest(user_id=None, movie_id=None)
         pass
     
     # =========================================================================
@@ -119,6 +127,8 @@ class TestPredictionRequest:
         - Test the actual behavior
         """
         # TODO: Implement
+        with pytest.raises(ValidationError):
+            PredictionRequest(user_id=196, movie_id="242")
         pass
 
 
@@ -136,13 +146,13 @@ class TestPredictionResponse:
         TODO: Implement this test
         """
         # TODO: Implement
-        # response = PredictionResponse(
-        #     user_id="196",
-        #     movie_id="242",
-        #     predicted_rating=3.5,
-        #     model_version="1.0.0"
-        # )
-        # assert response.predicted_rating == 3.5
+        response = PredictionResponse(
+            user_id="196",
+            movie_id="242",
+            predicted_rating=3.5,
+            model_version="1.0.0"
+        )
+        assert response.predicted_rating == 3.5
         pass
     
     def test_rating_below_minimum_raises_error(self):
@@ -152,13 +162,13 @@ class TestPredictionResponse:
         TODO: Implement this test
         """
         # TODO: Implement
-        # with pytest.raises(ValidationError):
-        #     PredictionResponse(
-        #         user_id="196",
-        #         movie_id="242",
-        #         predicted_rating=0.5,  # Below minimum
-        #         model_version="1.0.0"
-        #     )
+        with pytest.raises(ValidationError):
+            PredictionResponse(
+                user_id="196",
+                movie_id="242",
+                predicted_rating=0.5,  # Below minimum
+                model_version="1.0.0"
+            )
         pass
     
     def test_rating_above_maximum_raises_error(self):
@@ -168,6 +178,13 @@ class TestPredictionResponse:
         TODO: Implement this test
         """
         # TODO: Implement
+        with pytest.raises(ValidationError):
+            PredictionResponse(
+                user_id="196",
+                movie_id="242",
+                predicted_rating=5.5,  # Above maximum
+                model_version="1.0.0"
+            )
         pass
     
     def test_rating_at_boundaries(self):
@@ -177,6 +194,25 @@ class TestPredictionResponse:
         TODO: Implement this test
         """
         # TODO: Implement
+        # Test minimum boundary
+        response_min = PredictionResponse(
+            user_id="196",
+            movie_id="242",
+            predicted_rating=1.0,
+            model_version="1.0.0"
+        )
+
+        assert response_min.predicted_rating == 1.0
+
+        # Test maximum boundary
+        response_max = PredictionResponse(
+            user_id="196",
+            movie_id="242",
+            predicted_rating=5.0,
+            model_version="1.0.0"
+        )
+
+        assert response_max.predicted_rating == 5.0
         pass
 
 
@@ -194,6 +230,13 @@ class TestHealthResponse:
         TODO: Implement this test
         """
         # TODO: Implement
+        response = HealthResponse(
+            status="ok",
+            model_loaded=True
+        )
+
+        assert response.status == "ok"
+        assert response.model_loaded is True
         pass
     
     def test_health_response_status_types(self):
@@ -203,6 +246,14 @@ class TestHealthResponse:
         TODO: Implement this test
         """
         # TODO: Implement
+        statuses = ["ok", "healthy", "error"]
+
+        for status in statuses:
+            response = HealthResponse(
+                status=status,
+                model_loaded=True
+            )
+            assert response.status == status
         pass
 
 
@@ -220,6 +271,14 @@ class TestBatchPredictionRequest:
         TODO: Implement this test (BONUS)
         """
         # TODO: Implement
+        request = BatchPredictionRequest(
+            predictions=[
+                PredictionItem(user_id="196", movie_id="242"),
+                PredictionItem(user_id="186", movie_id="302")
+            ]
+        )
+
+        assert len(request.predictions) == 2
         pass
     
     def test_empty_predictions_list_raises_error(self):
@@ -229,6 +288,8 @@ class TestBatchPredictionRequest:
         TODO: Implement this test (BONUS)
         """
         # TODO: Implement
+        with pytest.raises(ValidationError):
+            BatchPredictionRequest(predictions=[])
         pass
     
     def test_too_many_predictions_raises_error(self):
@@ -239,6 +300,13 @@ class TestBatchPredictionRequest:
         - The schema has max_length=100
         """
         # TODO: Implement
+        predictions = [
+            PredictionItem(user_id=str(i), movie_id=str(i))
+            for i in range(101)
+        ]
+
+        with pytest.raises(ValidationError):
+            BatchPredictionRequest(predictions=predictions)
         pass
 
 

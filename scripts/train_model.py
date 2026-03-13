@@ -31,7 +31,7 @@ def main():
     
     # Define model
     print("\n[2/4] Performing cross-validation...")
-    model = SVD(n_factors=100, n_epochs=20, lr_all=0.005, reg_all=0.02)
+    model = SVD(n_factors=150, n_epochs=30, lr_all=0.005, reg_all=0.02)
     
     # Cross-validation
     cv_results = cross_validate(model, data, measures=['RMSE', 'MAE'], cv=5, verbose=True)
