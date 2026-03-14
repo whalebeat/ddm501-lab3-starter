@@ -38,11 +38,11 @@ jobs:
           python-version: '3.10'
       
       # TODO 2: Add dependency caching
-      # - name: Cache pip dependencies
-      #   uses: actions/cache@v3
-      #   with:
-      #     path: ~/.cache/pip
-      #     key: ${{ runner.os }}-pip-${{ hashFiles('requirements*.txt') }}
+      - name: Cache pip dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements*.txt') }}
       
       - name: Install dependencies
         run: |
@@ -50,14 +50,14 @@ jobs:
           pip install flake8 black isort
       
       # TODO 3: Add linting steps
-      # - name: Run flake8
-      #   run: flake8 app/ tests/ --max-line-length=100 --exclude=__pycache__
+      - name: Run flake8
+        run: flake8 app/ tests/ --max-line-length=100 --exclude=__pycache__
       
-      # - name: Check black formatting
-      #   run: black --check app/ tests/
+      - name: Check black formatting
+        run: black --check app/ tests/
       
-      # - name: Check import sorting
-      #   run: isort --check-only app/ tests/
+      - name: Check import sorting
+        run: isort --check-only app/ tests/
 
   # ===========================================================================
   # Type Checking Job
@@ -82,8 +82,8 @@ jobs:
           pip install mypy types-requests
       
       # TODO 4: Add type checking step
-      # - name: Run mypy
-      #   run: mypy app/ --ignore-missing-imports
+      - name: Run mypy
+        run: mypy app/ --ignore-missing-imports
 
   # ===========================================================================
   # TODO 5: Test Job
@@ -108,6 +108,11 @@ jobs:
           python-version: '3.10'
       
       # TODO: Add pip caching
+      - name: Cache pip dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements*.txt') }}
       
       - name: Install dependencies
         run: |
@@ -116,19 +121,19 @@ jobs:
           pip install -r requirements-dev.txt
       
       # TODO 6: Train model step
-      # - name: Train model
-      #   run: python scripts/train_model.py
+      - name: Train model
+        run: python scripts/train_model.py
       
       # TODO 7: Run tests with coverage
-      # - name: Run tests
-      #   run: pytest tests/ -v --cov=app --cov-report=xml --cov-report=html
+      - name: Run tests
+        run: pytest tests/ -v --cov=app --cov-report=xml --cov-report=html
       
       # TODO 8: Upload coverage report (BONUS)
-      # - name: Upload coverage to Codecov
-      #   uses: codecov/codecov-action@v3
-      #   with:
-      #     file: ./coverage.xml
-      #     fail_ci_if_error: false
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage.xml
+          fail_ci_if_error: false
 
   # ===========================================================================
   # TODO 9: Build Job (BONUS)
@@ -137,21 +142,21 @@ jobs:
   # - Build Docker image
   # - Verify image builds successfully
   
-  # build:
-  #   name: Build Docker Image
-  #   runs-on: ubuntu-latest
-  #   needs: [test]
-  #   
-  #   steps:
-  #     - name: Checkout code
-  #       uses: actions/checkout@v4
-  #     
-  #     - name: Build Docker image
-  #       run: docker build -t movie-rating-api:test .
-  #     
-  #     - name: Test Docker image
-  #       run: |
-  #         docker run -d -p 8000:8000 --name test-api movie-rating-api:test
-  #         sleep 10
-  #         curl http://localhost:8000/health
-  #         docker stop test-api
+  build:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    needs: [test]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Build Docker image
+        run: docker build -t movie-rating-api:test .
+      
+      - name: Test Docker image
+        run: |
+          docker run -d -p 8000:8000 --name test-api movie-rating-api:test
+          sleep 10
+          curl http://localhost:8000/health
+          docker stop test-api
