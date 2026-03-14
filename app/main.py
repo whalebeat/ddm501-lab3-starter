@@ -2,18 +2,19 @@
 FastAPI application for Movie Rating Prediction.
 """
 
-from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
 import logging
 
-from app.config import API_TITLE, API_DESCRIPTION, API_VERSION, MODEL_VERSION
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+
+from app.config import API_DESCRIPTION, API_TITLE, API_VERSION, MODEL_VERSION
 from app.model import MovieRatingModel
 from app.schemas import (
-    PredictionRequest,
-    PredictionResponse,
-    HealthResponse,
     BatchPredictionRequest,
     BatchPredictionResponse,
+    HealthResponse,
+    PredictionRequest,
+    PredictionResponse,
 )
 
 # Setup logging

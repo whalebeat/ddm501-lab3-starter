@@ -11,11 +11,11 @@ import pytest
 from pydantic import ValidationError
 
 from app.schemas import (
+    BatchPredictionRequest,
+    HealthResponse,
+    PredictionItem,
     PredictionRequest,
     PredictionResponse,
-    HealthResponse,
-    BatchPredictionRequest,
-    PredictionItem,
 )
 
 

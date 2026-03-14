@@ -8,6 +8,7 @@ Run tests:
 """
 
 import pytest
+
 from app.model import MovieRatingModel
 
 

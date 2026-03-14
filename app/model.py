@@ -2,13 +2,13 @@
 ML Model wrapper for movie rating prediction.
 """
 
-import pickle
 import logging
+import pickle
 
 # from pathlib import Path
-from typing import List, Tuple, Optional
+from typing import List, Optional, Tuple
 
-from app.config import MODEL_PATH, MIN_RATING, MAX_RATING
+from app.config import MAX_RATING, MIN_RATING, MODEL_PATH
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
