@@ -124,7 +124,7 @@ class TestModelDirectional:
             prediction = trained_model.predict(pair["user_id"], pair["movie_id"])
             actual = pair["actual_rating"]
             assert abs(prediction - actual) < 1.5, \
-            f"Prediction {prediction} too far from actual {actual}"
+                f"Prediction {prediction} too far from actual {actual}"
         pass
 
     def test_different_movies_different_predictions(self, trained_model):
