@@ -38,7 +38,7 @@ app.add_middleware(
 )
 
 # Global model instance
-model: MovieRatingModel = None
+model: MovieRatingModel | None = None
 
 
 @app.on_event("startup")
