@@ -195,9 +195,7 @@ class TestPredictEndpoint:
         """
         # TODO: Implement
         response = test_client.post(
-            "/predict",
-            content="invalid json",
-            headers={"Content-Type": "application/json"}
+            "/predict", content="invalid json", headers={"Content-Type": "application/json"}
         )
 
         assert response.status_code == 422
@@ -219,11 +217,7 @@ class TestPredictEndpoint:
         # TODO: Implement
         for pair in known_user_movie_pairs:
             response = test_client.post(
-                "/predict",
-                json={
-                    "user_id": pair["user_id"],
-                    "movie_id": pair["movie_id"]
-                }
+                "/predict", json={"user_id": pair["user_id"], "movie_id": pair["movie_id"]}
             )
 
             assert response.status_code == 200

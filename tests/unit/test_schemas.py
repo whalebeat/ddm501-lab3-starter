@@ -147,10 +147,7 @@ class TestPredictionResponse:
         """
         # TODO: Implement
         response = PredictionResponse(
-            user_id="196",
-            movie_id="242",
-            predicted_rating=3.5,
-            model_version="1.0.0"
+            user_id="196", movie_id="242", predicted_rating=3.5, model_version="1.0.0"
         )
         assert response.predicted_rating == 3.5
         pass
@@ -167,7 +164,7 @@ class TestPredictionResponse:
                 user_id="196",
                 movie_id="242",
                 predicted_rating=0.5,  # Below minimum
-                model_version="1.0.0"
+                model_version="1.0.0",
             )
         pass
 
@@ -183,7 +180,7 @@ class TestPredictionResponse:
                 user_id="196",
                 movie_id="242",
                 predicted_rating=5.5,  # Above maximum
-                model_version="1.0.0"
+                model_version="1.0.0",
             )
         pass
 
@@ -196,20 +193,14 @@ class TestPredictionResponse:
         # TODO: Implement
         # Test minimum boundary
         response_min = PredictionResponse(
-            user_id="196",
-            movie_id="242",
-            predicted_rating=1.0,
-            model_version="1.0.0"
+            user_id="196", movie_id="242", predicted_rating=1.0, model_version="1.0.0"
         )
 
         assert response_min.predicted_rating == 1.0
 
         # Test maximum boundary
         response_max = PredictionResponse(
-            user_id="196",
-            movie_id="242",
-            predicted_rating=5.0,
-            model_version="1.0.0"
+            user_id="196", movie_id="242", predicted_rating=5.0, model_version="1.0.0"
         )
 
         assert response_max.predicted_rating == 5.0
@@ -230,10 +221,7 @@ class TestHealthResponse:
         TODO: Implement this test
         """
         # TODO: Implement
-        response = HealthResponse(
-            status="ok",
-            model_loaded=True
-        )
+        response = HealthResponse(status="ok", model_loaded=True)
 
         assert response.status == "ok"
         assert response.model_loaded is True
@@ -249,10 +237,7 @@ class TestHealthResponse:
         statuses = ["ok", "healthy", "error"]
 
         for status in statuses:
-            response = HealthResponse(
-                status=status,
-                model_loaded=True
-            )
+            response = HealthResponse(status=status, model_loaded=True)
             assert response.status == status
         pass
 
@@ -274,7 +259,7 @@ class TestBatchPredictionRequest:
         request = BatchPredictionRequest(
             predictions=[
                 PredictionItem(user_id="196", movie_id="242"),
-                PredictionItem(user_id="186", movie_id="302")
+                PredictionItem(user_id="186", movie_id="302"),
             ]
         )
 
@@ -300,10 +285,7 @@ class TestBatchPredictionRequest:
         - The schema has max_length=100
         """
         # TODO: Implement
-        predictions = [
-            PredictionItem(user_id=str(i), movie_id=str(i))
-            for i in range(101)
-        ]
+        predictions = [PredictionItem(user_id=str(i), movie_id=str(i)) for i in range(101)]
 
         with pytest.raises(ValidationError):
             BatchPredictionRequest(predictions=predictions)

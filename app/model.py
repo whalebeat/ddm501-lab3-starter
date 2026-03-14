@@ -4,6 +4,7 @@ ML Model wrapper for movie rating prediction.
 
 import pickle
 import logging
+
 # from pathlib import Path
 from typing import List, Tuple, Optional
 

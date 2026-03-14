@@ -91,10 +91,7 @@ class TestModelInvariance:
 
         batch_results = trained_model.predict_batch(pairs)
 
-        individual_results = [
-            trained_model.predict(user, movie)
-            for user, movie in pairs
-        ]
+        individual_results = [trained_model.predict(user, movie) for user, movie in pairs]
 
         assert batch_results == individual_results
         pass
@@ -123,8 +120,9 @@ class TestModelDirectional:
         for pair in known_user_movie_pairs:
             prediction = trained_model.predict(pair["user_id"], pair["movie_id"])
             actual = pair["actual_rating"]
-            assert abs(prediction - actual) < 1.5, \
-                f"Prediction {prediction} too far from actual {actual}"
+            assert (
+                abs(prediction - actual) < 1.5
+            ), f"Prediction {prediction} too far from actual {actual}"
         pass
 
     def test_different_movies_different_predictions(self, trained_model):
@@ -205,8 +203,7 @@ class TestMinimumFunctionality:
         """
         # TODO: Implement
         predictions = [
-            trained_model.predict(p["user_id"], p["movie_id"])
-            for p in known_user_movie_pairs
+            trained_model.predict(p["user_id"], p["movie_id"]) for p in known_user_movie_pairs
         ]
         assert len(set(predictions)) > 1, "All predictions are identical"
         pass

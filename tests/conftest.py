@@ -16,6 +16,7 @@ from app.model import MovieRatingModel
 # API Client Fixtures
 # =============================================================================
 
+
 @pytest.fixture(scope="session")
 def test_client():
     """
@@ -30,6 +31,7 @@ def test_client():
 # =============================================================================
 # Model Fixtures
 # =============================================================================
+
 
 @pytest.fixture(scope="session")
 def trained_model():
@@ -47,6 +49,7 @@ def trained_model():
 # =============================================================================
 # Sample Data Fixtures
 # =============================================================================
+
 
 @pytest.fixture
 def sample_prediction_request():
@@ -96,6 +99,7 @@ def invalid_prediction_requests():
 # =============================================================================
 # Known Test Cases Fixtures
 # =============================================================================
+
 
 @pytest.fixture
 def known_user_movie_pairs():
