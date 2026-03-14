@@ -136,7 +136,7 @@ jobs:
           python -m pip install scikit-learn==1.3.2
           python -m pip install --no-build-isolation scikit-surprise==1.1.3
 
-          python -m pip install pydantic==2.5.2 python-dotenv==1.0.0
+          python -m pip install -r requirements.txt
           python -m pip install -r requirements-dev.txt
       
       # TODO 6: Train model step
