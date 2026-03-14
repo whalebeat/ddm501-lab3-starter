@@ -11,11 +11,9 @@ from fastapi.testclient import TestClient
 from app.main import app
 from app.model import MovieRatingModel
 
-
 # =============================================================================
 # API Client Fixtures
 # =============================================================================
-
 
 @pytest.fixture(scope="session")
 def test_client():
@@ -27,11 +25,9 @@ def test_client():
     with TestClient(app) as client:
         yield client
 
-
 # =============================================================================
 # Model Fixtures
 # =============================================================================
-
 
 @pytest.fixture(scope="session")
 def trained_model():
@@ -45,17 +41,14 @@ def trained_model():
     except FileNotFoundError:
         pytest.skip("Model file not found. Run train_model.py first.")
 
-
 # =============================================================================
 # Sample Data Fixtures
 # =============================================================================
-
 
 @pytest.fixture
 def sample_prediction_request():
     """Sample valid prediction request."""
     return {"user_id": "196", "movie_id": "242"}
-
 
 @pytest.fixture
 def sample_batch_request():
@@ -67,7 +60,6 @@ def sample_batch_request():
             {"user_id": "22", "movie_id": "377"},
         ]
     }
-
 
 @pytest.fixture
 def sample_ratings():
@@ -82,7 +74,6 @@ def sample_ratings():
         {"user_id": "3", "movie_id": "30", "rating": 1.0},
     ]
 
-
 @pytest.fixture
 def invalid_prediction_requests():
     """Collection of invalid prediction requests for testing validation."""
@@ -95,11 +86,9 @@ def invalid_prediction_requests():
         {"user_id": "   ", "movie_id": "242"},  # Whitespace user_id
     ]
 
-
 # =============================================================================
 # Known Test Cases Fixtures
 # =============================================================================
-
 
 @pytest.fixture
 def known_user_movie_pairs():
@@ -115,12 +104,10 @@ def known_user_movie_pairs():
         {"user_id": "166", "movie_id": "346", "actual_rating": 1.0},
     ]
 
-
 @pytest.fixture
 def unknown_users():
     """User IDs that are unlikely to exist in the dataset."""
     return ["99999", "999999", "0", "-1", "new_user"]
-
 
 @pytest.fixture
 def unknown_movies():

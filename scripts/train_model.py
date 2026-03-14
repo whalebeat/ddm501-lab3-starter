@@ -26,7 +26,7 @@ def main():
 
     # Load data
     print("\n[1/4] Loading MovieLens 100K dataset...")
-    data = Dataset.load_builtin('ml-100k')
+    data = Dataset.load_builtin("ml-100k")
     print("      Dataset loaded successfully!")
 
     # Define model
@@ -34,7 +34,7 @@ def main():
     model = SVD(n_factors=150, n_epochs=30, lr_all=0.005, reg_all=0.02)
 
     # Cross-validation
-    cv_results = cross_validate(model, data, measures=['RMSE', 'MAE'], cv=5, verbose=True)
+    cv_results = cross_validate(model, data, measures=["RMSE", "MAE"], cv=5, verbose=True)
     print(f"\n      Mean RMSE: {cv_results['test_rmse'].mean():.4f}")
     print(f"      Mean MAE:  {cv_results['test_mae'].mean():.4f}")
 
@@ -46,7 +46,7 @@ def main():
 
     # Save model
     print(f"\n[4/4] Saving model to {model_path}...")
-    with open(model_path, 'wb') as f:
+    with open(model_path, "wb") as f:
         pickle.dump(model, f)
     print("      Model saved successfully!")
 
