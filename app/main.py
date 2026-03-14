@@ -67,7 +67,7 @@ async def root():
 async def health_check():
     """
     Health check endpoint.
-    
+
     Returns the health status of the API and whether the model is loaded.
     """
     return HealthResponse(
@@ -80,16 +80,16 @@ async def health_check():
 async def predict(request: PredictionRequest):
     """
     Predict movie rating for a user.
-    
+
     Args:
         request: PredictionRequest with user_id and movie_id
-        
+
     Returns:
         PredictionResponse with predicted rating
     """
     if model is None or not model.is_loaded():
         raise HTTPException(status_code=503, detail="Model not loaded")
-    
+
     try:
         rating = model.predict(request.user_id, request.movie_id)
         return PredictionResponse(
@@ -107,16 +107,16 @@ async def predict(request: PredictionRequest):
 async def predict_batch(request: BatchPredictionRequest):
     """
     Predict movie ratings for multiple user-movie pairs.
-    
+
     Args:
         request: BatchPredictionRequest with list of predictions
-        
+
     Returns:
         BatchPredictionResponse with all predicted ratings
     """
     if model is None or not model.is_loaded():
         raise HTTPException(status_code=503, detail="Model not loaded")
-    
+
     try:
         results = []
         for item in request.predictions:
