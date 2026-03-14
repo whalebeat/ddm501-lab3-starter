@@ -19,6 +19,10 @@ COPY requirements.txt .
 
 # Upgrade pip and install dependencies
 RUN pip install --upgrade pip \
+    && pip install setuptools wheel \
+    && pip install numpy cython \
+    && pip install scikit-learn==1.3.2 \
+    && pip install --no-build-isolation scikit-surprise==1.1.3 \
     && pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
