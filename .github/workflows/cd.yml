@@ -127,7 +127,7 @@ jobs:
 
       - name: Verify image is available
         run: |
-          docker pull ${{ secrets.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}
+          docker pull ${{ secrets.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}
           echo "Image ${{ github.ref_name }} pulled successfully"
 
   # ==========================================================================
