@@ -30,7 +30,7 @@ coverage.xml
 .mypy_cache/
 
 # Models (large files)
-models/*.pkl
+# models/*.pkl
 !models/.gitkeep
 
 # Data
