@@ -2,81 +2,107 @@
 # Pre-commit hooks configuration
 # DDM501 - Lab 3: Testing & CI/CD
 #
-# TODO: Complete this configuration
-#
 # Setup:
 #   pip install pre-commit
 #   pre-commit install
 #
 # Run manually:
 #   pre-commit run --all-files
+#
+# Hook execution order (mirrors the CI pipeline):
+#   1. File hygiene (trailing whitespace, merge conflicts, secrets, …)
+#   2. black   — auto-format Python code
+#   3. isort   — sort imports (compatible with black)
+#   4. flake8  — lint / style gate
+#   5. mypy    — static type checking
+#   6. pytest  — fast unit-test smoke test (unit tests only)
 # =============================================================================
+
+default_language_version:
+  python: python3.10
 
 repos:
   # ===========================================================================
-  # Standard pre-commit hooks
+  # 1. Standard file-hygiene hooks
   # ===========================================================================
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.5.0
     hooks:
-      - id: trailing-whitespace
-      - id: end-of-file-fixer
-      - id: check-yaml
-      - id: check-json
-      - id: check-added-large-files
+      - id: trailing-whitespace         # remove trailing spaces
+      - id: end-of-file-fixer           # ensure files end with a newline
+      - id: check-yaml                  # validate YAML syntax
+      - id: check-json                  # validate JSON syntax
+      - id: check-toml                  # validate TOML syntax (pyproject.toml)
+      - id: check-added-large-files     # block accidental large-file commits
         args: ['--maxkb=1000']
-      - id: check-merge-conflict
-      - id: detect-private-key
+      - id: check-merge-conflict        # block unresolved merge conflict markers
+      - id: detect-private-key          # block accidental secret commits
+      - id: debug-statements            # warn on leftover pdb / breakpoint() calls
+      - id: check-ast                   # validate Python files are syntactically valid
 
   # ===========================================================================
-  # TODO 1: Add Black formatter
+  # 2. Black — opinionated Python formatter
+  #    Config source: [tool.black] in pyproject.toml (line-length = 100)
   # ===========================================================================
-  # - repo: https://github.com/psf/black
-  #   rev: 23.12.1
-  #   hooks:
-  #     - id: black
-  #       language_version: python3.10
-  #       args: ['--line-length=100']
+  - repo: https://github.com/psf/black
+    rev: 23.12.1
+    hooks:
+      - id: black
+        language_version: python3.10
+        args: ['--line-length=100']
 
   # ===========================================================================
-  # TODO 2: Add isort for import sorting
+  # 3. isort — import sorter (black-compatible profile)
+  #    Config source: [tool.isort] in pyproject.toml
   # ===========================================================================
-  # - repo: https://github.com/pycqa/isort
-  #   rev: 5.13.2
-  #   hooks:
-  #     - id: isort
-  #       args: ['--profile=black', '--line-length=100']
+  - repo: https://github.com/pycqa/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        args: ['--profile=black', '--line-length=100']
 
   # ===========================================================================
-  # TODO 3: Add Flake8 linter
+  # 4. Flake8 — PEP-8 linting and style enforcement
+  #    Aligns with the CI pipeline: --max-line-length=100
   # ===========================================================================
-  # - repo: https://github.com/pycqa/flake8
-  #   rev: 7.0.0
-  #   hooks:
-  #     - id: flake8
-  #       args: ['--max-line-length=100', '--exclude=__pycache__,venv']
+  - repo: https://github.com/pycqa/flake8
+    rev: 7.0.0
+    hooks:
+      - id: flake8
+        args:
+          - '--max-line-length=100'
+          - '--exclude=__pycache__,venv,.venv,dist,build'
+          # Ignore rules that conflict with black formatting
+          - '--extend-ignore=E203,W503'
 
   # ===========================================================================
-  # TODO 4: Add mypy type checker (BONUS)
+  # 5. mypy — static type checker
+  #    Config source: [tool.mypy] in pyproject.toml
+  #    Checks app/ only (tests/ excluded in pyproject.toml mypy config)
   # ===========================================================================
-  # - repo: https://github.com/pre-commit/mirrors-mypy
-  #   rev: v1.8.0
-  #   hooks:
-  #     - id: mypy
-  #       additional_dependencies:
-  #         - types-requests
-  #         - pydantic
-  #       args: ['--ignore-missing-imports']
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.8.0
+    hooks:
+      - id: mypy
+        files: ^app/
+        args: ['--ignore-missing-imports', '--config-file=pyproject.toml']
+        additional_dependencies:
+          - 'pydantic>=2.5.2'
+          - 'fastapi>=0.104.1'
+          - 'types-requests'
 
   # ===========================================================================
-  # TODO 5: Add pytest hook (BONUS)
+  # 6. pytest — fast unit-test smoke test (runs before every commit)
+  #    Only unit tests are run here; the full suite runs in CI.
+  #    Set SKIP=pytest to bypass on a specific commit:
+  #      SKIP=pytest git commit -m "..."
   # ===========================================================================
-  # This runs tests before every commit (can be slow)
-  # - repo: local
-  #   hooks:
-  #     - id: pytest
-  #       name: pytest
-  #       entry: pytest tests/unit/ -v --tb=short
-  #       language: system
-  #       pass_filenames: false
-  #       always_run: true
+  - repo: local
+    hooks:
+      - id: pytest-unit
+        name: pytest (unit tests)
+        entry: pytest tests/unit/ -v --tb=short -q
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-commit]

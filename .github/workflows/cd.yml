@@ -2,97 +2,256 @@
 # CD Pipeline for Movie Rating API
 # DDM501 - Lab 3: Testing & CI/CD
 #
-# TODO: Complete this workflow configuration (BONUS)
+# Triggered automatically when a version tag (e.g. v1.2.3) is pushed.
+# Flow: test → build & push image → create release → deploy staging → deploy prod
 # =============================================================================
 
 name: CD Pipeline
 
-# =============================================================================
-# TODO 1: Configure Triggers
-# =============================================================================
-# This workflow should run when:
-# - A version tag is pushed (e.g., v1.0.0, v1.2.3)
-
+# ---------------------------------------------------------------------------
+# Trigger: any tag that matches the semver pattern vX.Y.Z
+# ---------------------------------------------------------------------------
 on:
   push:
     tags:
-      - 'v*'
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+
+# ---------------------------------------------------------------------------
+# Global environment variables shared across all jobs
+# ---------------------------------------------------------------------------
+env:
+  IMAGE_NAME: movie-rating-api
 
 jobs:
-  # ===========================================================================
-  # TODO 2: Build and Push Docker Image
-  # ===========================================================================
-  build-and-push:
-    name: Build and Push Docker Image
+  # ==========================================================================
+  # 1. Run full test suite — gate for all downstream jobs
+  # ==========================================================================
+  test:
+    name: Run Tests
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
-      # TODO 3: Set up Docker Buildx
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: pip
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          python -m ensurepip --upgrade
+          python -m pip install --upgrade pip setuptools wheel
+          python -m pip install numpy cython
+          python -m pip install scikit-learn==1.3.2
+          python -m pip install --no-build-isolation scikit-surprise==1.1.3
+          python -m pip install -r requirements.txt
+          python -m pip install -r requirements-dev.txt
+
+      - name: Train model
+        run: python scripts/train_model.py
+
+      - name: Run tests with coverage
+        run: pytest tests/ -v --cov=app --cov-report=xml --cov-fail-under=80
+
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage.xml
+
+  # ==========================================================================
+  # 2. Build Docker image and push to Docker Hub
+  # ==========================================================================
+  build-and-push:
+    name: Build and Push Docker Image
+    runs-on: ubuntu-latest
+    needs: [test]
+
+    outputs:
+      # Expose the full image reference so deploy jobs can reference it
+      image_tag: ${{ steps.meta.outputs.version }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Extract version and labels from the git tag
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ secrets.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest
+          labels: |
+            org.opencontainers.image.title=Movie Rating API
+            org.opencontainers.image.description=SVD-based collaborative filtering API
+            org.opencontainers.image.version=${{ github.ref_name }}
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-      
-      # TODO 4: Login to Docker Hub
+
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
-      
-      # TODO 5: Build and push Docker image
-      - name: Build and push
+
+      - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
-          tags: |
-            ${{ secrets.DOCKER_USERNAME }}/movie-rating-api:latest
-            ${{ secrets.DOCKER_USERNAME }}/movie-rating-api:${{ github.ref_name }}
-      
-      # TODO 6: Create GitHub Release (BONUS)
-      - name: Create Release
-        uses: softprops/action-gh-release@v1
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          # Layer cache — speeds up rebuilds on unchanged layers
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Verify image is available
+        run: |
+          docker pull ${{ secrets.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}
+          echo "Image ${{ github.ref_name }} pulled successfully"
+
+  # ==========================================================================
+  # 3. Create GitHub Release with auto-generated release notes
+  # ==========================================================================
+  create-release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: [build-and-push]
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # full history needed for changelog generation
+
+      - name: Download coverage artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-report
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
           name: Release ${{ github.ref_name }}
+          generate_release_notes: true   # auto-fills body from merged PR titles
           body: |
-            Automated release for version ${{ github.ref_name }}
-          draft: false
-          prerelease: false
+            ## Docker Image
 
-  # ===========================================================================
-  # TODO 7: Deploy to Staging (BONUS)
-  # ===========================================================================
-  # This job would deploy to a staging environment
-  # In a real scenario, this might deploy to AWS, GCP, Azure, etc.
-  
+            ```
+            docker pull ${{ secrets.DOCKER_USERNAME }}/movie-rating-api:${{ github.ref_name }}
+            ```
+
+            ## Test Results
+            All tests passed with ≥ 80% coverage before this release was published.
+            See the attached `coverage.xml` for details.
+          files: coverage.xml
+          draft: false
+          prerelease: ${{ contains(github.ref_name, '-rc') || contains(github.ref_name, '-beta') || contains(github.ref_name, '-alpha') }}
+
+  # ==========================================================================
+  # 4. Deploy to Staging
+  #    Requires the "staging" environment to be configured in GitHub
+  #    (Settings → Environments → staging).  Add any required reviewers there.
+  # ==========================================================================
   deploy-staging:
     name: Deploy to Staging
     runs-on: ubuntu-latest
     needs: [build-and-push]
-    environment: staging
-    
+    environment:
+      name: staging
+      url: https://staging.movie-rating-api.example.com
+
+    env:
+      DEPLOY_IMAGE: ${{ secrets.DOCKER_USERNAME }}/movie-rating-api:${{ github.ref_name }}
+
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Deploy to staging
         run: |
-          echo "Deploying to staging environment..."
-          # Add deployment commands here
+          echo "▶ Deploying image ${DEPLOY_IMAGE} to staging..."
+          # ----------------------------------------------------------------
+          # Replace the block below with your real deployment command, e.g.:
+          #
+          # SSH deploy:
+          #   ssh ${{ secrets.STAGING_HOST }} \
+          #     "docker pull ${DEPLOY_IMAGE} && \
+          #      docker stop movie-rating-api || true && \
+          #      docker run -d --rm -p 8000:8000 --name movie-rating-api ${DEPLOY_IMAGE}"
+          #
+          # kubectl deploy:
+          #   kubectl set image deployment/movie-rating-api \
+          #     api=${DEPLOY_IMAGE} --namespace=staging
+          # ----------------------------------------------------------------
+          echo "Deployment command placeholder — add real commands above."
 
-  # ===========================================================================
-  # TODO 8: Deploy to Production (BONUS)
-  # ===========================================================================
-  # This job would deploy to production after staging approval
-  
+      - name: Smoke test staging
+        run: |
+          echo "▶ Running smoke test against staging..."
+          # Replace with real staging URL once environment is configured:
+          # curl --fail https://staging.movie-rating-api.example.com/health
+          echo "Smoke test placeholder — uncomment curl above."
+
+  # ==========================================================================
+  # 5. Deploy to Production
+  #    Requires a passing staging deploy AND manual approval via the
+  #    "production" GitHub environment protection rule.
+  # ==========================================================================
   deploy-production:
     name: Deploy to Production
     runs-on: ubuntu-latest
-    needs: [deploy-staging]
-    environment: production
-    
+    needs: [deploy-staging, create-release]
+    environment:
+      name: production
+      url: https://movie-rating-api.example.com
+
+    env:
+      DEPLOY_IMAGE: ${{ secrets.DOCKER_USERNAME }}/movie-rating-api:${{ github.ref_name }}
+
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Deploy to production
         run: |
-          echo "Deploying to production environment..."
-          # Add deployment commands here
+          echo "▶ Deploying image ${DEPLOY_IMAGE} to production..."
+          # Same pattern as staging — replace with real deployment commands.
+          echo "Deployment command placeholder — add real commands above."
+
+      - name: Smoke test production
+        run: |
+          echo "▶ Running smoke test against production..."
+          # curl --fail https://movie-rating-api.example.com/health
+          echo "Smoke test placeholder — uncomment curl above."
+
+      - name: Notify on success
+        if: success()
+        run: |
+          echo "Production deployment of ${{ github.ref_name }} succeeded."
+          # Hook into Slack / Teams / PagerDuty here if desired.
+
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "Production deployment of ${{ github.ref_name }} FAILED."
+          # Trigger alert / rollback here if desired.

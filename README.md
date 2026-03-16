@@ -1,13 +1,16 @@
 # Lab 3: Testing & CI/CD for ML Systems
 
+
 ## Overview
 
-Implement comprehensive testing strategies and CI/CD pipelines for the movie rating prediction system to ensure quality and automate deployment.
+Comprehensive testing strategies and CI/CD pipelines for the movie rating prediction system, ensuring quality through automated verification at every layer of the stack.
 
 **Course:** DDM501 - AI in Production: From Models to Systems  
 **Weight:** 15% of total grade  
 **Duration:** 3 hours (in-class) + 1 week to complete  
 **Prerequisites:** Lab 1 and Lab 2 completed
+
+> 📄 See Testing Strategy.pdf for the full testing strategy, fixture reference, and coverage gap analysis.
 
 ## Learning Objectives
 
@@ -120,21 +123,43 @@ mypy app/
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-## TODO Tasks
-
-Complete the following files:
+## Status
 
 ### Test Files
-- [ ] `tests/unit/test_model.py` - Unit tests for model class
-- [ ] `tests/unit/test_schemas.py` - Schema validation tests
-- [ ] `tests/integration/test_api.py` - API endpoint tests
-- [ ] `tests/data/test_data_quality.py` - Data quality tests
-- [ ] `tests/model/test_model_behavior.py` - Behavioral tests
+- [x] `tests/unit/test_model.py` - Unit tests for model class
+- [x] `tests/unit/test_schemas.py` - Schema validation tests
+- [x] `tests/integration/test_api.py` - API endpoint tests
+- [x] `tests/data/test_data_quality.py` - Data quality tests
+- [x] `tests/model/test_model_behavior.py` - Behavioral tests
 
 ### CI/CD Files
-- [ ] `.github/workflows/ci.yml` - CI pipeline
-- [ ] `.github/workflows/cd.yml` - CD pipeline (BONUS)
-- [ ] `.pre-commit-config.yaml` - Pre-commit hooks
+- [x] `.github/workflows/ci.yml` - CI pipeline
+- [x] `.github/workflows/cd.yml` - CD pipeline (BONUS)
+- [x] `.pre-commit-config.yaml` - Pre-commit hooks
+
+## Coverage Report
+
+Latest run: **89 passed, 0 failed** in 10.87 s
+
+```
+Name              Stmts   Miss  Cover
+--------------------------------------
+app\__init__.py       1      0   100%
+app\config.py        13      0   100%
+app\main.py          50     10    80%
+app\model.py         42      9    79%
+app\schemas.py       30      1    97%
+--------------------------------------
+TOTAL               136     20    85%
+```
+
+Run locally:
+```bash
+pytest tests/ -v --cov=app --cov-report=html
+# open htmlcov/index.html
+```
+
+---
 
 ## Test Types
 
@@ -176,15 +201,15 @@ def test_same_input_same_output(model):
 
 ## CI/CD Pipeline
 
-### Continuous Integration
-- Runs on every push and pull request
-- Executes linting, type checking, and tests
-- Reports code coverage
+### Continuous Integration (`.github/workflows/ci.yml`)
+- Triggers on every push and pull request
+- Steps: `black --check` → `flake8` → `mypy` → `pytest --cov`
+- Fails the build if coverage drops below **80%**
 
-### Continuous Deployment (BONUS)
-- Triggered on version tags
-- Builds and pushes Docker image
-- Deploys to staging/production
+### Continuous Deployment (`.github/workflows/cd.yml`)
+- Triggered on version tags (`v*`)
+- Builds and pushes Docker image to registry
+- Deploys to staging/production environment
 
 ## Grading Rubric
 
@@ -211,10 +236,10 @@ def test_same_input_same_output(model):
 
 ## Submission
 
-1. Complete all TODO items
-2. Ensure all tests pass
-3. Achieve minimum 80% coverage
-4. Push to GitHub with CI badge
+1. ✅ All TODO items complete
+2. ✅ All 89 tests pass
+3. ✅ 85% coverage (target: ≥ 80%)
+4. ✅ Push to GitHub with CI badge
 5. Submit repository link via LMS
 
 ## License
