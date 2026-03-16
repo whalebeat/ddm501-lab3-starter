@@ -202,14 +202,67 @@ def test_same_input_same_output(model):
 ## CI/CD Pipeline
 
 ### Continuous Integration (`.github/workflows/ci.yml`)
-- Triggers on every push and pull request
-- Steps: `black --check` → `flake8` → `mypy` → `pytest --cov`
+- Triggers on every push and pull request to `main` / `develop`
+- Steps: `black --check` → `flake8` → `isort --check` → `mypy` → `pytest --cov`
 - Fails the build if coverage drops below **80%**
 
 ### Continuous Deployment (`.github/workflows/cd.yml`)
-- Triggered on version tags (`v*`)
-- Builds and pushes Docker image to registry
-- Deploys to staging/production environment
+- Triggered by pushing a semver version tag (e.g. `v1.2.3`)
+- Flow: test → build & push Docker image → GitHub Release → deploy staging → deploy production
+
+#### How to trigger a release
+
+```bash
+# 1. Make sure all changes are committed and pushed
+git add .
+git commit -m "chore: prepare release v1.0.0"
+git push origin main
+
+# 2. Create and push a version tag  (vMAJOR.MINOR.PATCH)
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+This single `git push origin v1.0.0` kicks off the full CD pipeline:
+
+```
+push tag v1.0.0
+    │
+    ▼
+[test]  ← full pytest suite, fails if coverage < 80%
+    │
+    ▼
+[build-and-push]  ← Docker image tagged v1.0.0, 1.0, latest
+    │
+    ├─────────────────────────────┐
+    ▼                             ▼
+[deploy-staging]          [create-release]
+    │                      GitHub Release with
+    │                      auto-generated notes
+    ▼
+[deploy-production]  ← requires manual approval
+```
+
+**Pre-release tags** (containing `-rc`, `-beta`, or `-alpha`) are automatically marked as GitHub pre-releases:
+
+```bash
+git tag v1.1.0-rc1
+git push origin v1.1.0-rc1
+```
+
+**Required GitHub secrets** (Settings → Secrets → Actions):
+
+| Secret | Purpose |
+|--------|---------|
+| `DOCKER_USERNAME` | Docker Hub login |
+| `DOCKER_PASSWORD` | Docker Hub token |
+
+**Required GitHub environments** (Settings → Environments):
+
+| Environment | Protection |
+|-------------|-----------|
+| `staging` | Optional: add required reviewers |
+| `production` | Recommended: require manual approval |
 
 ## Grading Rubric
 

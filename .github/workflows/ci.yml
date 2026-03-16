@@ -107,7 +107,7 @@ jobs:
   test:
     name: Run Tests
     runs-on: ubuntu-latest
-    # TODO: Add needs: [lint] to run after linting
+    needs: [lint]
     
     steps:
       - name: Checkout code
